@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex1</title>
+</head>
+<body>
+    <p id="p1"></p>
+
+    <script>
+    
+    let str = "\'You've already taken the first steps in learning English. You've passed the basic level of the language and are ready for the second stage. It's time to reach the next level! ABA English offers a wide range of texts in English to improve your writing and reading skills. One of the new challenges you’ll face will be to learn how to skillfully handle simple texts in English for intermediate students. They aren’t difficult but do differ from the basic ones because they usually have more detail and, therefore, a larger vocabulary. To successfully overcome this new challenge, you’ll have to perfect your reading and writing at an intermediate level, taking into account what’s expected of you according to levels B1 and B2 of the CEFR. Does that sound complicated? Don't worry about it. ABA English will prepare you with our Smart Learning® method so that you learn English in a dynamic and fun way, with personalized content that will allow you to achieve your objectives for the intermediate level\'";
+    
+    /*
+    1/
+    let mask = /'/g;
+    let p1 = document.getElementById("p1");
+    p1.innerHTML = str.replace(mask, '"');
+
+    2/ */
+    let mask1 = /^'/;
+    let mask2 = /'$/;
+    let p1 = document.getElementById("p1");
+
+    p1.innerHTML = str.replace(mask1, '"').replace(mask2, '"');
+
+    </script>
+
+</body>
+</html>
+
+
+
