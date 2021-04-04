@@ -24,7 +24,7 @@ Vue.component('cart-item', {
     },
     template: `
         <li :data-id="item.id" class="cart-item">
-        {{item.title}} ({{item.quantity}}) 
+            {{item.title}} ({{item.quantity}}) 
             <button 
                 @click="removeFromCartHandler"
             >-</button>
@@ -155,14 +155,6 @@ const app = new Vue({
             this.isCartVisible = !this.isCartVisible;
         },
 
-        searchLine() {
-            if (this.search === '') {
-                this.filterGoods = this.goods;
-            }
-            const regexp = new RegExp(this.search, 'gi');
-            this.filterGoods = this.goods.filter((good) => regexp.test(good.title));
-        },
-
         async removeFromCartHandler(id) {
             const item = this.cart.find((item) => item.id == id);
 
@@ -207,11 +199,6 @@ const app = new Vue({
 
             console.log(this.filteredGoods);
         },
-
-        removeCartHandler(e) {
-            const index = e.target.dataset.index;
-            this.cart.splice(index - 1, 1);
-        }
     },
 
     mounted() {
