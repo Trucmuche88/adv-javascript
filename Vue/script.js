@@ -1,9 +1,34 @@
 Vue.component('search', {
     template: `
         <div class="search">
-            <input type="text" class="goods-search" />
-            <button id="searchLine" type="button">Искать</button>
-        </div>`
+            <input 
+                type="text" 
+                placeholder="Искать..."
+                class="goods-search" 
+                @input="search"
+            />
+        </div>`,
+    methods: {
+        search(e) {
+            this.$emit('search', e.target.value);
+        },
+    },
+});
+
+Vue.component('cart-item', {
+    props: ['item'],
+    methods: {
+        removeFromCartHandler() {
+            this.$emit('removeFromCart', this.item.id);
+        },
+    },
+    template: `
+        <li :data-id="item.id" class="cart-item">
+        {{item.title}} ({{item.quantity}}) 
+            <button 
+                @click="removeFromCartHandler"
+            >-</button>
+        </li>`
 });
 
 Vue.component('cart', {
@@ -17,42 +42,85 @@ Vue.component('cart', {
         isVisibleCart() {
             this.isCartVisible = !this.isCartVisible;
         },
+        removeFromCartHandler(id) {
+            this.$emit('removeFromCart', id);
+        },
     },
     template: `
         <div class="cart">
-            <button class="cart-button" v-on:click="isVisibleCart" type="button">Корзина {{ cart.length }}</button>
+            <button 
+                class="cart-button" 
+                type="button"
+                @click="isVisibleCart" 
+            >
+                Корзина {{ cart.length }}
+            </button>
             <div v-if="isCartVisible">
                 <ul>
-                    <li v-for="(good, index) in cart">{{good.title}} <button data-index="index" v-on:click="removeCartHandler">-</button></li>
+                    <cart-item 
+                        v-for="item in cart"
+                        :key="item.id"
+                        :item="item"
+                        @removeFromCart="removeFromCartHandler"
+                    />
                 </ul>
             </div>
         </div>`
 });
 
 Vue.component('goods-item', {
-    props: ['good', 'index'],
+    props: ['good'],
+    methods: {
+        addToCart() {
+            this.$emit('addToCart', this.good.id);
+        },
+    },
     template: `
-        <div class="goods-item">
+        <div :data-id="good.id" class="goods-item">
             <h3>{{ good.title }}</h3>
             <p>{{ good.price }}</p>
-            <button :data-index="index" v-on:click="$root.$emit('add-to-cart', good.id)">+</button>
+            <button @click="addToCart">+</button>
         </div>`
 });
 
 Vue.component('goods-list', {
     props: ['goods'],
+    methods: {
+        addToCartHandler(id) {
+            this.$emit('addToCart', id);
+        },
+    },
     template: `
         <div class="goods-list">
             <goods-item 
                 v-for="good in goods"
-                v-bind:key="good.id"
+                :key="good.id"
                 :good="good"
-            ></goods-item>
+                @addToCart="addToCartHandler"
+            />
         </div>`
 });
 
 const app = new Vue({
     el: '#app',
+    template: `
+        <div>
+            <header>
+                <search 
+                    @search="searchHandler"
+                />
+                <cart
+                    :cart="cart"
+                    @removeFromCart="removeFromCartHandler"
+                />
+            </header>
+            <main>
+                <goods-list 
+                    :goods="filteredGoods"
+                    @addToCart="addToCartHandler"
+                />
+            </main>
+        </div>`,
     data: {
         goods: [],
         filteredGoods: [],
@@ -60,7 +128,6 @@ const app = new Vue({
         isCartVisible: false,
         search: '',
     },
-
     methods: {
         makeGETRequest(url, callback) {
             let xhr;
@@ -84,27 +151,6 @@ const app = new Vue({
             xhr.send();
         },
 
-        makePOSTRequest(url, data, callback) {
-            let xhr;
-
-            if (window.XMLHttpRequest) {
-                xhr = new XMLHttpRequest();
-            } else if (window.ActiveXObject) {
-                xhr = new ActiveXObject("Microsoft.XMLHTTP");
-            }
-
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4) {
-                    callback(xhr.responseText);
-                }
-            }
-
-            xhr.open('POST', url, true);
-            xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-
-            xhr.send(data);
-        },
-
         isVisibleCart() {
             this.isCartVisible = !this.isCartVisible;
         },
@@ -116,9 +162,52 @@ const app = new Vue({
             const regexp = new RegExp(this.search, 'gi');
             this.filterGoods = this.goods.filter((good) => regexp.test(good.title));
         },
-        addToCart(id) {
+
+        async removeFromCartHandler(id) {
+            const item = this.cart.find((item) => item.id == id);
+
+            const data = await fetch(`http://127.0.0.1:3000/removeFromCart`, {
+                method: 'DELETE',
+                body: JSON.stringify(item),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const cart = await data.json();
+            this.cart = cart;
+            
+            console.log('Great Success !');
         },
-        
+
+        addToCartHandler(id) {
+            const good = this.goods.find((item) => item.id == id);
+
+            fetch(`http://127.0.0.1:3000/addToCart`, {
+                method: 'POST',
+                body: JSON.stringify(good),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                this.cart = data;
+            });
+        },
+
+        searchHandler(query) {
+            if (query === '') {
+                this.filteredGoods = this.goods;
+            }
+
+            const regexp = new RegExp(query, 'gi');
+            this.filteredGoods = this.goods.filter((good) => regexp.test(good.title));
+
+            console.log(this.filteredGoods);
+        },
+
         removeCartHandler(e) {
             const index = e.target.dataset.index;
             this.cart.splice(index - 1, 1);
@@ -126,15 +215,13 @@ const app = new Vue({
     },
 
     mounted() {
-        this.makeGETRequest(`http://localhost:3000/catalogData`, (goods) => {
+        this.makeGETRequest(`http://127.0.0.1:3000/catalogData`, (goods) => {
             this.goods = JSON.parse(goods);
             this.filteredGoods = JSON.parse(goods);
-
-            console.log(this.filteredGoods);
         });
 
-        this.$root.$on('add-to-cart', (id) => {
-            this.addToCart(id);
+        this.makeGETRequest(`http://127.0.0.1:3000/cart`, (cart) => {
+            this.cart = JSON.parse(cart);
         });
     }
 });
