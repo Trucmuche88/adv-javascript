@@ -1,108 +1,11 @@
-Vue.component('search', {
-    template: `
-        <div class="search">
-            <input 
-                type="text" 
-                placeholder="Искать..."
-                class="goods-search" 
-                @input="search"
-            />
-        </div>`,
-    methods: {
-        search(e) {
-            this.$emit('search', e.target.value);
-        },
-    },
-});
-
-Vue.component('cart-item', {
-    props: ['item'],
-    methods: {
-        removeFromCartHandler() {
-            this.$emit('removeFromCart', this.item.id);
-        },
-    },
-    template: `
-        <li :data-id="item.id" class="cart-item">
-            {{item.title}} ({{item.quantity}}) 
-            <button 
-                @click="removeFromCartHandler"
-            >-</button>
-        </li>`
-});
-
-Vue.component('cart', {
-    props: ['cart'],
-    data: function() {
-        return {
-            isCartVisible: false
-        }
-    },
-    methods: {
-        isVisibleCart() {
-            this.isCartVisible = !this.isCartVisible;
-        },
-        removeFromCartHandler(id) {
-            this.$emit('removeFromCart', id);
-        },
-    },
-    template: `
-        <div class="cart">
-            <button 
-                class="cart-button" 
-                type="button"
-                @click="isVisibleCart" 
-            >
-                Корзина {{ cart.length }}
-            </button>
-            <div v-if="isCartVisible">
-                <ul>
-                    <cart-item 
-                        v-for="item in cart"
-                        :key="item.id"
-                        :item="item"
-                        @removeFromCart="removeFromCartHandler"
-                    />
-                </ul>
-            </div>
-        </div>`
-});
-
-Vue.component('goods-item', {
-    props: ['good'],
-    methods: {
-        addToCart() {
-            this.$emit('addToCart', this.good.id);
-        },
-    },
-    template: `
-        <div :data-id="good.id" class="goods-item">
-            <h3>{{ good.title }}</h3>
-            <p>{{ good.price }}</p>
-            <button @click="addToCart">+</button>
-        </div>`
-});
-
-Vue.component('goods-list', {
-    props: ['goods'],
-    methods: {
-        addToCartHandler(id) {
-            this.$emit('addToCart', id);
-        },
-    },
-    template: `
-        <div class="goods-list">
-            <goods-item 
-                v-for="good in goods"
-                :key="good.id"
-                :good="good"
-                @addToCart="addToCartHandler"
-            />
-        </div>`
-});
+import Cart from './components/Cart.js';
+import GoodsItem from './components/GoodsItem.js';
+import GoodsList from './components/GoodsList.js';
+import Search from './components/Search.js';
 
 const app = new Vue({
     el: '#app',
+    components: Cart, GoodsItem, GoodsList, Search,
     template: `
         <div>
             <header>
